@@ -10,8 +10,11 @@ if (!rcc_render_page_by_slug($slug)) :
             ?>
             <section class="rcc-page-hero">
                 <div class="rcc-shell">
-                    <span class="rcc-kicker">Page</span>
-                    <h1><?php the_title(); ?></h1>
+                    <div class="rcc-page-hero__inner">
+                        <span class="rcc-kicker">Page</span>
+                        <h1><?php the_title(); ?></h1>
+                        <div class="rcc-page-hero__divider"></div>
+                    </div>
                 </div>
             </section>
             <section class="rcc-section">
