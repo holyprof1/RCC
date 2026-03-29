@@ -10,15 +10,19 @@ add_action('after_setup_theme', function () {
 });
 
 add_action('wp_enqueue_scripts', function () {
+    $style_ver = file_exists(get_stylesheet_directory() . '/style.css') ? (string) filemtime(get_stylesheet_directory() . '/style.css') : '2.0.0';
+    $main_css_ver = file_exists(get_template_directory() . '/assets/css/rcc-main.css') ? (string) filemtime(get_template_directory() . '/assets/css/rcc-main.css') : '2.1.0';
+    $main_js_ver = file_exists(get_template_directory() . '/assets/js/main.js') ? (string) filemtime(get_template_directory() . '/assets/js/main.js') : '2.1.0';
+
     wp_enqueue_style(
         'rcc-fonts',
         'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap',
         [],
         null
     );
-    wp_enqueue_style('rcc-style', get_stylesheet_uri(), [], '2.0.0');
-    wp_enqueue_style('rcc-main', get_template_directory_uri() . '/assets/css/rcc-main.css', ['rcc-fonts'], '2.1.0');
-    wp_enqueue_script('rcc-main', get_template_directory_uri() . '/assets/js/main.js', [], '2.1.0', true);
+    wp_enqueue_style('rcc-style', get_stylesheet_uri(), [], $style_ver);
+    wp_enqueue_style('rcc-main', get_template_directory_uri() . '/assets/css/rcc-main.css', ['rcc-fonts'], $main_css_ver);
+    wp_enqueue_script('rcc-main', get_template_directory_uri() . '/assets/js/main.js', [], $main_js_ver, true);
 });
 
 add_action('wp_head', function () {
@@ -117,11 +121,15 @@ function rcc_button($label, $url, $class = 'rcc-btn-primary')
 function rcc_upload_asset($filename)
 {
     $basename  = basename($filename);
+    $upload_abs = wp_normalize_path(WP_CONTENT_DIR . '/uploads/' . ltrim($filename, '/'));
+    if (file_exists($upload_abs)) {
+        return rcc_versioned_public_url(content_url('/uploads/' . ltrim($filename, '/')));
+    }
     $theme_abs = get_template_directory() . '/assets/images/' . $basename;
     if (file_exists($theme_abs)) {
-        return get_template_directory_uri() . '/assets/images/' . $basename;
+        return rcc_versioned_public_url(get_template_directory_uri() . '/assets/images/' . $basename);
     }
-    return content_url('/uploads/' . ltrim($filename, '/'));
+    return rcc_versioned_public_url(content_url('/uploads/' . ltrim($filename, '/')));
 }
 
 function rcc_acf_option($key, $default = '')
@@ -141,23 +149,67 @@ function rcc_acf_option($key, $default = '')
     return $default;
 }
 
+function rcc_versioned_public_url($url)
+{
+    if (!$url) {
+        return $url;
+    }
+
+    $parsed = wp_parse_url($url);
+    $path = $parsed['path'] ?? '';
+    if (!$path) {
+        return $url;
+    }
+
+    $local = wp_normalize_path(untrailingslashit(ABSPATH) . '/' . ltrim($path, '/'));
+    if (!file_exists($local)) {
+        return $url;
+    }
+
+    return add_query_arg('ver', (string) filemtime($local), $url);
+}
+
+function rcc_saved_media_url($saved)
+{
+    if (!$saved) {
+        return '';
+    }
+
+    $saved = trim((string) $saved);
+    $parsed = wp_parse_url($saved);
+    $path = $parsed['path'] ?? '';
+
+    if ($path) {
+        $local = wp_normalize_path(untrailingslashit(ABSPATH) . '/' . ltrim($path, '/'));
+        if (file_exists($local)) {
+            return rcc_versioned_public_url($saved);
+        }
+    }
+
+    if (preg_match('#^https?://#i', $saved)) {
+        return $saved;
+    }
+
+    return '';
+}
+
 function rcc_get_logo_url($event = '')
 {
     if ($event === 'mega') {
-        $saved = rcc_acf_option('mega_logo');
+        $saved = rcc_saved_media_url(rcc_acf_option('mega_logo'));
         if ($saved) {
             return $saved;
         }
         return rcc_upload_asset_candidates(['2026/03/megastruct-logo.jpeg', 'megastruct-logo.jpeg']);
     }
     if ($event === 'messo') {
-        $saved = rcc_acf_option('messo_logo');
+        $saved = rcc_saved_media_url(rcc_acf_option('messo_logo'));
         if ($saved) {
             return $saved;
         }
         return rcc_upload_asset_candidates(['2026/03/messodex-logo.jpeg', 'messodex-logo.jpeg']);
     }
-    $saved = rcc_acf_option('rcc_logo');
+    $saved = rcc_saved_media_url(rcc_acf_option('rcc_logo'));
     if ($saved) {
         return $saved;
     }
@@ -166,26 +218,26 @@ function rcc_get_logo_url($event = '')
 
 function rcc_upload_asset_candidates($candidates)
 {
-    // Check theme assets/images/ first (enables fully portable theme export)
-    foreach ($candidates as $candidate) {
-        $basename  = basename($candidate);
-        $theme_abs = get_template_directory() . '/assets/images/' . $basename;
-        if (file_exists($theme_abs)) {
-            return get_template_directory_uri() . '/assets/images/' . $basename;
-        }
-    }
-
-    // Fall back to wp-content/uploads
+    // Prefer uploads first so fresh media changes win immediately.
     foreach ($candidates as $candidate) {
         $relative = ltrim($candidate, '/');
         $absolute = wp_normalize_path(WP_CONTENT_DIR . '/uploads/' . $relative);
         if (file_exists($absolute)) {
-            return content_url('/uploads/' . $relative);
+            return rcc_versioned_public_url(content_url('/uploads/' . $relative));
+        }
+    }
+
+    // Fall back to theme assets/images for portability.
+    foreach ($candidates as $candidate) {
+        $basename  = basename($candidate);
+        $theme_abs = get_template_directory() . '/assets/images/' . $basename;
+        if (file_exists($theme_abs)) {
+            return rcc_versioned_public_url(get_template_directory_uri() . '/assets/images/' . $basename);
         }
     }
 
     // Last resort: return theme path for first candidate
-    return get_template_directory_uri() . '/assets/images/' . basename($candidates[0]);
+    return rcc_versioned_public_url(get_template_directory_uri() . '/assets/images/' . basename($candidates[0]));
 }
 
 function rcc_get_home_data()

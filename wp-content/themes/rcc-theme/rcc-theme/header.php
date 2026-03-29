@@ -8,24 +8,29 @@
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 <?php $site = rcc_site_config(); ?>
-<?php $preload = rcc_preloader_images(); ?>
-<div class="rcc-preloader" id="rcc-preloader" aria-hidden="true">
-    <div class="rcc-preloader__inner">
-        <img class="rcc-preloader__brand" src="<?php echo esc_url($preload['rcc_logo']); ?>" alt="Radiant Creative Concepts">
-        <p class="rcc-preloader__label">Radiant Creative Concepts Limited</p>
-        <p class="rcc-preloader__sub">Event Organizers</p>
-        <div class="rcc-preloader__events">
-            <div class="rcc-preloader__event">
-                <img src="<?php echo esc_url($preload['mega_logo']); ?>" alt="Megastruct Africa">
-                <span>MEGASTRUCT AFRICA</span>
+<?php if (is_front_page()) : ?>
+    <?php $preload = rcc_preloader_images(); ?>
+    <div class="rcc-preloader" id="rcc-preloader" aria-hidden="true" data-loader-scope="home">
+        <div class="rcc-preloader__inner">
+            <img class="rcc-preloader__brand" src="<?php echo esc_url($preload['rcc_logo']); ?>" alt="Radiant Creative Concepts">
+            <p class="rcc-preloader__label">Radiant Creative Concepts Limited</p>
+            <p class="rcc-preloader__sub">Event Organizers</p>
+            <div class="rcc-preloader__events">
+                <div class="rcc-preloader__event">
+                    <img src="<?php echo esc_url($preload['mega_logo']); ?>" alt="Megastruct Africa" onerror="this.closest('.rcc-preloader__event').style.display='none';">
+                    <span>MEGASTRUCT AFRICA</span>
+                </div>
+                <div class="rcc-preloader__event">
+                    <img src="<?php echo esc_url($preload['messo_logo']); ?>" alt="Messodex West Africa" onerror="this.closest('.rcc-preloader__event').style.display='none';">
+                    <span>MESSODEX WEST AFRICA</span>
+                </div>
             </div>
-            <div class="rcc-preloader__event">
-                <img src="<?php echo esc_url($preload['messo_logo']); ?>" alt="Messodex West Africa">
-                <span>MESSODEX WEST AFRICA</span>
+            <div class="rcc-preloader__bar">
+                <span class="rcc-preloader__bar-fill"></span>
             </div>
         </div>
     </div>
-</div>
+<?php endif; ?>
 <header class="rcc-header" id="rcc-header">
     <div class="rcc-shell rcc-header__inner">
         <a class="rcc-brand" href="<?php echo esc_url(home_url('/')); ?>">

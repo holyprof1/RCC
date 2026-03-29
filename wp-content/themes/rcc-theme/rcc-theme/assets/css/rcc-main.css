@@ -82,6 +82,15 @@ body.rcc-loading {
     radial-gradient(circle at top, rgba(123, 47, 190, 0.18), transparent 35%),
     linear-gradient(160deg, rgba(10,10,10,0.98) 0%, rgba(18,15,26,0.98) 100%);
   transition: opacity 0.45s ease, visibility 0.45s ease;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.rcc-preloader.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .rcc-preloader.is-hidden {
@@ -95,12 +104,14 @@ body.rcc-loading {
   gap: 1rem;
   justify-items: center;
   text-align: center;
+  animation: rccLoaderRise 0.7s ease both;
 }
 
 .rcc-preloader__brand {
   width: 112px;
   max-width: 50vw;
   object-fit: contain;
+  animation: rccLoaderPulse 1.8s ease-in-out infinite;
 }
 
 .rcc-preloader__label {
@@ -134,6 +145,11 @@ body.rcc-loading {
   padding: 1rem;
   border: 1px solid rgba(255,255,255,0.1);
   background: rgba(255,255,255,0.03);
+  animation: rccLoaderFade 1.1s ease both;
+}
+
+.rcc-preloader__event:nth-child(2) {
+  animation-delay: 0.15s;
 }
 
 .rcc-preloader__event img {
@@ -146,6 +162,43 @@ body.rcc-loading {
   font-size: 0.76rem;
   letter-spacing: 0.14em;
   color: rgba(255,255,255,0.82);
+}
+
+.rcc-preloader__bar {
+  width: min(320px, 82vw);
+  height: 4px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.12);
+  border-radius: 999px;
+}
+
+.rcc-preloader__bar-fill {
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--rcc-gold), #ffe59f);
+  animation: rccLoaderBar 1.25s ease-in-out infinite;
+}
+
+@keyframes rccLoaderPulse {
+  0%, 100% { transform: scale(1); opacity: 0.96; }
+  50% { transform: scale(1.04); opacity: 1; }
+}
+
+@keyframes rccLoaderRise {
+  from { transform: translateY(18px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes rccLoaderFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes rccLoaderBar {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
 }
 
 /* ============================================================

@@ -6,15 +6,45 @@ document.addEventListener('DOMContentLoaded', function () {
   var preloader = document.getElementById('rcc-preloader');
 
   if (body && preloader) {
-    body.classList.add('rcc-loading');
+    var loaderKey = 'rcc_home_loader_seen';
+    var shouldShowLoader = false;
+    var loaderClosed = false;
 
-    var closePreloader = function () {
+    try {
+      shouldShowLoader = !window.sessionStorage.getItem(loaderKey);
+    } catch (e) {
+      shouldShowLoader = true;
+    }
+
+    if (shouldShowLoader) {
+      preloader.classList.add('is-active');
+      body.classList.add('rcc-loading');
+
+      var closePreloader = function () {
+        if (loaderClosed) {
+          return;
+        }
+        loaderClosed = true;
+        preloader.classList.add('is-hidden');
+        preloader.classList.remove('is-active');
+        body.classList.remove('rcc-loading');
+        try {
+          window.sessionStorage.setItem(loaderKey, '1');
+        } catch (e) {}
+      };
+
+      preloader.querySelectorAll('img').forEach(function (img) {
+        img.addEventListener('error', function () {
+          this.closest('.rcc-preloader__event') && (this.closest('.rcc-preloader__event').style.display = 'none');
+        });
+      });
+
+      window.addEventListener('load', closePreloader, { once: true });
+      window.setTimeout(closePreloader, 4000);
+    } else {
       preloader.classList.add('is-hidden');
-      body.classList.remove('rcc-loading');
-    };
-
-    window.addEventListener('load', closePreloader, { once: true });
-    window.setTimeout(closePreloader, 5000);
+      preloader.classList.remove('is-active');
+    }
   }
 
   if (header) {
