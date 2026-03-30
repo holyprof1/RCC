@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function () {
   if (body && preloader) {
     var loaderKey = 'rcc_home_loader_seen';
     var shouldShowLoader = false;
-    var loaderClosed = false;
 
     try {
       shouldShowLoader = !window.sessionStorage.getItem(loaderKey);
@@ -20,27 +19,60 @@ document.addEventListener('DOMContentLoaded', function () {
       preloader.classList.add('is-active');
       body.classList.add('rcc-loading');
 
+      var loaderClosed = false;
+      var pending = 0;
+
       var closePreloader = function () {
-        if (loaderClosed) {
-          return;
-        }
+        if (loaderClosed) { return; }
         loaderClosed = true;
         preloader.classList.add('is-hidden');
         preloader.classList.remove('is-active');
         body.classList.remove('rcc-loading');
-        try {
-          window.sessionStorage.setItem(loaderKey, '1');
-        } catch (e) {}
+        try { window.sessionStorage.setItem(loaderKey, '1'); } catch (e) {}
       };
 
+      var tick = function () {
+        pending = Math.max(0, pending - 1);
+        if (pending === 0) { closePreloader(); }
+      };
+
+      // Hide broken event logos in the preloader itself
       preloader.querySelectorAll('img').forEach(function (img) {
         img.addEventListener('error', function () {
-          this.closest('.rcc-preloader__event') && (this.closest('.rcc-preloader__event').style.display = 'none');
+          var ev = this.closest('.rcc-preloader__event');
+          if (ev) { ev.style.display = 'none'; }
         });
       });
 
-      window.addEventListener('load', closePreloader, { once: true });
-      window.setTimeout(closePreloader, 4000);
+      // Wait for every <img> on the page to finish loading
+      document.querySelectorAll('img').forEach(function (img) {
+        if (!img.complete || !img.naturalWidth) {
+          pending++;
+          img.addEventListener('load',  tick, { once: true });
+          img.addEventListener('error', tick, { once: true });
+        }
+      });
+
+      // Also preload the hero background-image (it's a CSS background, not an <img>)
+      var heroBg = document.querySelector('.rcc-home-hero');
+      if (heroBg) {
+        var bgMatch = (heroBg.style.backgroundImage || '').match(/url\(['"]?([^'")\s]+)['"]?\)/);
+        if (bgMatch && bgMatch[1]) {
+          pending++;
+          var bgImg = new Image();
+          bgImg.onload  = tick;
+          bgImg.onerror = tick;
+          bgImg.src = bgMatch[1];
+        }
+      }
+
+      if (pending === 0) {
+        // Everything already cached — short polished delay then close
+        window.setTimeout(closePreloader, 600);
+      }
+
+      // Safety net: never block the user longer than 7 seconds
+      window.setTimeout(closePreloader, 7000);
     } else {
       preloader.classList.add('is-hidden');
       preloader.classList.remove('is-active');

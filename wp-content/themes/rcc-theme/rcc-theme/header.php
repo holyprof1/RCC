@@ -34,7 +34,8 @@
 <header class="rcc-header" id="rcc-header">
     <div class="rcc-shell rcc-header__inner">
         <a class="rcc-brand" href="<?php echo esc_url(home_url('/')); ?>">
-            <img class="rcc-brand__logo" src="<?php echo esc_url(rcc_get_logo_url()); ?>" alt="<?php echo esc_attr($site['company']); ?>">
+            <img class="rcc-brand__logo rcc-brand__logo--desktop" src="<?php echo esc_url(rcc_get_logo_url('desktop')); ?>" alt="<?php echo esc_attr($site['company']); ?>">
+            <img class="rcc-brand__logo rcc-brand__logo--mobile" src="<?php echo esc_url(rcc_get_logo_url('mobile')); ?>" alt="<?php echo esc_attr($site['company']); ?>">
         </a>
         <button class="rcc-menu-toggle" id="rcc-menu-toggle" aria-expanded="false" aria-controls="rcc-mobile-nav">Menu</button>
         <nav class="rcc-nav" aria-label="Primary navigation">

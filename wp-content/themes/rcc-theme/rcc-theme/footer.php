@@ -4,7 +4,7 @@
     <div class="rcc-shell">
         <div class="rcc-footer__top">
             <div>
-                <h2>Radiant Creative</h2>
+                <h2>Radiant Creative Concepts Ltd.</h2>
                 <p class="rcc-footer__col-tagline">Organizing Africa&apos;s Leading Exhibitions &amp; Trade Shows. Building Connections, Creating Opportunities.</p>
             </div>
             <div>

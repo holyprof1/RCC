@@ -108,8 +108,8 @@ body.rcc-loading {
 }
 
 .rcc-preloader__brand {
-  width: 112px;
-  max-width: 50vw;
+  width: 200px;
+  max-width: 60vw;
   object-fit: contain;
   animation: rccLoaderPulse 1.8s ease-in-out infinite;
 }
@@ -153,7 +153,7 @@ body.rcc-loading {
 }
 
 .rcc-preloader__event img {
-  height: 46px;
+  height: 80px;
   width: auto;
   object-fit: contain;
 }
@@ -226,14 +226,18 @@ body.rcc-loading {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 78px;
+  min-height: 90px;
 }
 
 /* Brand */
 .rcc-brand { display: flex; align-items: center; }
 .rcc-brand__logo {
-  width: 78px; height: 78px; object-fit: contain;
+  height: 82px; width: auto; max-width: 280px;
+  object-fit: contain;
 }
+/* Desktop logo visible by default; mobile logo hidden */
+.rcc-brand__logo--mobile  { display: none; }
+.rcc-brand__logo--desktop { display: block; }
 .rcc-brand__text { display: none; }
 
 /* Desktop Nav */
@@ -675,6 +679,16 @@ body.rcc-loading {
   font-size: 1rem; line-height: 1.85;
   max-width: 580px;
   margin: 0 auto;
+}
+
+.rcc-page-hero p strong {
+  display: block;
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.4rem;
+  line-height: 1.2;
 }
 
 .rcc-page-hero__divider {
@@ -1483,6 +1497,9 @@ body.rcc-loading {
 @media (max-width: 960px) {
   .rcc-nav { display: none; }
   .rcc-menu-toggle { display: inline-flex; }
+  /* Swap to compact mobile logo on small screens */
+  .rcc-brand__logo--desktop { display: none; }
+  .rcc-brand__logo--mobile  { display: block; height: 70px; width: auto; max-width: 160px; }
 
   .rcc-home-events__grid,
   .rcc-card-grid,
@@ -1565,16 +1582,20 @@ body.rcc-loading {
 .rcc-event-hero__brand-logo {
   display: block;
   margin: 0 auto 2rem;
-  height: 100px;
+  height: 180px;
   width: auto;
-  max-width: 260px;
-  object-fit: contain;
+  max-width: 480px;
   filter: drop-shadow(0 2px 18px rgba(0,0,0,0.7));
 }
-
+/* MEGASTRUCT — very wide image (2397×956), height controls it well */
 .rcc-ev-page--mega .rcc-event-hero__brand-logo {
-  height: 140px;
-  max-width: 320px;
+  height: 200px;
+  max-width: 500px;
+}
+/* MESSODEX — 500×500 square image, height-only approach */
+.rcc-ev-page--messo .rcc-event-hero__brand-logo {
+  height: 200px;
+  width: auto;
 }
 
 .rcc-event-hero__center {
@@ -2063,8 +2084,9 @@ body.rcc-loading {
 
 @media (max-width: 640px) {
   .rcc-event-hero__inner { padding: 5rem 1rem 4rem; }
-  .rcc-event-hero__brand-logo { height: 70px; max-width: 200px; }
-  .rcc-ev-page--mega .rcc-event-hero__brand-logo { height: 100px; max-width: 240px; }
+  .rcc-event-hero__brand-logo { height: 120px; max-width: 300px; }
+  .rcc-ev-page--mega .rcc-event-hero__brand-logo  { height: 140px; max-width: 340px; }
+  .rcc-ev-page--messo .rcc-event-hero__brand-logo { height: 120px; width: auto; }
   .rcc-ev-section { padding: 4rem 0; }
   .rcc-ev-about { gap: 2.5rem; }
   .rcc-ev-why-wrap { grid-template-columns: 1fr; }
@@ -2114,8 +2136,9 @@ body.rcc-loading {
 .rcc-ev-page--messo .rcc-ev-section-header h2  { color: var(--rcc-white); }
 .rcc-ev-page--messo .rcc-ev-profile-card h3    { color: var(--mx-blue-lt); }
 .rcc-ev-page--messo .rcc-ev-profile-card       { border-color: rgba(59,130,246,0.22); }
-.rcc-ev-page--messo .rcc-ev-datevenue__item h3 { color: var(--mx-blue-lt); }
-.rcc-ev-page--messo .rcc-ev-datevenue__item    { border-top-color: var(--mx-blue); }
+.rcc-ev-page--messo .rcc-ev-datevenue__item h3        { color: var(--mx-blue-lt); }
+.rcc-ev-page--messo .rcc-ev-datevenue__item            { border-top-color: var(--mx-blue); }
+.rcc-ev-page--messo .rcc-ev-datevenue__item:hover      { border-color: var(--mx-blue); }
 .rcc-ev-page--messo .rcc-ev-why-item           { border-left-color: var(--mx-blue); }
 .rcc-ev-page--messo .rcc-ev-why-item::before   { color: rgba(59,130,246,0.25); }
 .rcc-ev-page--messo .rcc-ev-stand-card::before { background: linear-gradient(90deg, var(--mx-blue), var(--mx-blue-lt)); }

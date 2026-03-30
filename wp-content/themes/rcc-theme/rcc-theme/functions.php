@@ -30,9 +30,9 @@ add_action('wp_head', function () {
         rcc_get_logo_url(),
         rcc_get_logo_url('mega'),
         rcc_get_logo_url('messo'),
-        rcc_upload_asset_candidates(['2026/03/hero.png', 'hero.png']),
-        rcc_upload_asset_candidates(['2026/03/MEGASTRUCT.png', 'MEGASTRUCT.png', 'megastruct.jpeg']),
-        rcc_upload_asset_candidates(['2026/03/MESSODEX.png', 'MESSODEX.png', '2026/03/MESSEDEX.png', 'MESSEDEX.png']),
+        rcc_upload_asset_candidates(['hero.png']),
+        rcc_get_event_visual_url('mega'),
+        rcc_get_event_visual_url('messo'),
     ];
 
     foreach (array_unique($images) as $i => $image) {
@@ -49,10 +49,10 @@ function rcc_site_config()
         'company'       => 'Radiant Creative Concepts Limited',
         'short_company' => 'RCC',
         'tagline'       => 'Event Management | Exhibitions | Trade Shows | Corporate & Social Events',
-        'phone'         => rcc_acf_option('rcc_phone',   '+234 903 491 4948'),
-        'email'         => rcc_acf_option('rcc_email',   'info@radiantcc.com'),
-        'website'       => 'www.radiantcc.com',
-        'website_url'   => 'https://www.radiantcc.com',
+        'phone'         => rcc_acf_option('rcc_phone',   '+234 903 491 4989'),
+        'email'         => rcc_acf_option('rcc_email',   'info@radiantccafrica.com'),
+        'website'       => 'www.radiantccafrica.com',
+        'website_url'   => 'https://www.radiantccafrica.com',
         'address'       => rcc_acf_option('rcc_address', 'RADIANT CREATIVE CONCEPTS LIMITED (EVENTS & EXHIBITIONS), Thuraya Crescent, Along Lagos-Ibadan Expressway, Mowe, Ogun State, Nigeria.'),
         'socials' => [
             ['label' => 'FB',       'url' => rcc_acf_option('rcc_social_facebook',  '#')],
@@ -121,15 +121,11 @@ function rcc_button($label, $url, $class = 'rcc-btn-primary')
 function rcc_upload_asset($filename)
 {
     $basename  = basename($filename);
-    $upload_abs = wp_normalize_path(WP_CONTENT_DIR . '/uploads/' . ltrim($filename, '/'));
-    if (file_exists($upload_abs)) {
-        return rcc_versioned_public_url(content_url('/uploads/' . ltrim($filename, '/')));
-    }
     $theme_abs = get_template_directory() . '/assets/images/' . $basename;
     if (file_exists($theme_abs)) {
         return rcc_versioned_public_url(get_template_directory_uri() . '/assets/images/' . $basename);
     }
-    return rcc_versioned_public_url(content_url('/uploads/' . ltrim($filename, '/')));
+    return rcc_versioned_public_url(get_template_directory_uri() . '/assets/images/' . $basename);
 }
 
 function rcc_acf_option($key, $default = '')
@@ -193,41 +189,63 @@ function rcc_saved_media_url($saved)
     return '';
 }
 
-function rcc_get_logo_url($event = '')
+function rcc_theme_img_url($filename)
 {
-    if ($event === 'mega') {
-        $saved = rcc_saved_media_url(rcc_acf_option('mega_logo'));
-        if ($saved) {
-            return $saved;
-        }
-        return rcc_upload_asset_candidates(['2026/03/megastruct-logo.jpeg', 'megastruct-logo.jpeg']);
+    return get_template_directory_uri() . '/assets/images/' . $filename;
+}
+
+function rcc_theme_image_exists($filename)
+{
+    return file_exists(get_template_directory() . '/assets/images/' . basename($filename));
+}
+
+function rcc_theme_svg_logo_url()
+{
+    if (rcc_theme_image_exists('rcc.svg')) {
+        return rcc_versioned_public_url(rcc_theme_img_url('rcc.svg'));
     }
-    if ($event === 'messo') {
-        $saved = rcc_saved_media_url(rcc_acf_option('messo_logo'));
-        if ($saved) {
-            return $saved;
-        }
-        return rcc_upload_asset_candidates(['2026/03/messodex-logo.jpeg', 'messodex-logo.jpeg']);
+
+    return '';
+}
+
+function rcc_get_logo_url($variant = '')
+{
+    $svg_logo = rcc_theme_svg_logo_url();
+
+    if ($variant === 'mega') {
+        return rcc_upload_asset_candidates(['MEGASTRUCT-LOGO.png', 'megastruct-logo.jpeg', 'megastruct-lgo.jpeg']);
     }
-    $saved = rcc_saved_media_url(rcc_acf_option('rcc_logo'));
-    if ($saved) {
-        return $saved;
+    if ($variant === 'messo') {
+        return rcc_upload_asset_candidates(['mesodex-logo.jpeg', 'mesodex-ogo.jpeg']);
     }
-    return rcc_upload_asset_candidates(['2026/03/rcc.PNG', 'rcc.PNG']);
+    if ($variant === 'desktop') {
+        if ($svg_logo) { return $svg_logo; }
+        return rcc_upload_asset_candidates(['rccc.png', 'RCC.png', 'rcc2.PNG']);
+    }
+    if ($variant === 'mobile') {
+        if ($svg_logo) { return $svg_logo; }
+        return rcc_upload_asset_candidates(['RCC.png', 'rccc.png', 'rcc2.PNG']);
+    }
+
+    if ($svg_logo) { return $svg_logo; }
+    return rcc_upload_asset_candidates(['rccc.png', 'RCC.png', 'rcc2.PNG']);
+}
+
+function rcc_get_event_visual_url($variant)
+{
+    if ($variant === 'mega') {
+        return rcc_upload_asset_candidates(['MEGASTRUCT.png', 'megastruct.jpeg']);
+    }
+
+    if ($variant === 'messo') {
+        return rcc_upload_asset_candidates(['messodex-logo.jpeg']);
+    }
+
+    return '';
 }
 
 function rcc_upload_asset_candidates($candidates)
 {
-    // Prefer uploads first so fresh media changes win immediately.
-    foreach ($candidates as $candidate) {
-        $relative = ltrim($candidate, '/');
-        $absolute = wp_normalize_path(WP_CONTENT_DIR . '/uploads/' . $relative);
-        if (file_exists($absolute)) {
-            return rcc_versioned_public_url(content_url('/uploads/' . $relative));
-        }
-    }
-
-    // Fall back to theme assets/images for portability.
     foreach ($candidates as $candidate) {
         $basename  = basename($candidate);
         $theme_abs = get_template_directory() . '/assets/images/' . $basename;
@@ -236,7 +254,6 @@ function rcc_upload_asset_candidates($candidates)
         }
     }
 
-    // Last resort: return theme path for first candidate
     return rcc_versioned_public_url(get_template_directory_uri() . '/assets/images/' . basename($candidates[0]));
 }
 
@@ -245,14 +262,14 @@ function rcc_get_home_data()
     return [
         'hero_title_html' => 'Shaping Africa\'s <span>Premier Events</span> &amp; <span>Exhibitions</span>',
         'hero_text' => 'Connecting Industries. Showcasing Innovation. Creating Lasting Opportunities.',
-        'hero_image' => rcc_upload_asset_candidates(['2026/03/hero.png', 'hero.png']),
+        'hero_image' => rcc_upload_asset_candidates(['hero.png']),
         'events' => [
             [
                 'title' => 'MEGASTRUCT AFRICA',
                 'subtitle' => 'Mega Infrastructure, Construction & Mining Equipment Expo',
                 'description' => 'An international platform for construction machinery, infrastructure solutions, mining equipment, investors, and industry leaders ready to shape Africa\'s growth.',
                 'url' => rcc_get_page_url('megastruct-africa'),
-                'image' => rcc_upload_asset_candidates(['2026/03/MEGASTRUCT.png', 'MEGASTRUCT.png', 'megastruct.jpeg']),
+                'image' => rcc_get_event_visual_url('mega'),
                 'meta' => '11th - 13th October 2026 | Landmark Centre, Victoria Island, Lagos',
                 'theme' => 'megastruct',
             ],
@@ -261,7 +278,7 @@ function rcc_get_home_data()
                 'subtitle' => 'Media, Stage & Sound Technology Expo',
                 'description' => 'A bold showcase for media technology, stage engineering, professional audio, lighting systems, and creative production built for the West African market.',
                 'url' => rcc_get_page_url('messodex-west-africa'),
-                'image' => rcc_upload_asset_candidates(['2026/03/MESSODEX.png', 'MESSODEX.png', '2026/03/MESSEDEX.png', 'MESSEDEX.png']),
+                'image' => rcc_get_event_visual_url('messo'),
                 'meta' => '19-21 August 2026 | Landmark Centre, Victoria Island, Lagos',
                 'theme' => 'messodex',
             ],
@@ -380,8 +397,8 @@ function rcc_get_megastruct_data()
         'subtitle' => 'Mega Infrastructure, Construction & Mining Equipment Expo',
         'date'    => rcc_acf_option('mega_date',  '11th - 13th October 2026'),
         'venue'   => rcc_acf_option('mega_venue', 'Landmark Centre, Victoria Island, Lagos, Nigeria'),
-        'email'   => rcc_acf_option('mega_email', 'megastruct@radiantcc.com'),
-        'phone'   => rcc_acf_option('mega_phone', '+234 903 491 4948'),
+        'email'   => rcc_acf_option('mega_email', 'megastruct@radiantccafrica.com'),
+        'phone'   => rcc_acf_option('mega_phone', '+234 903 491 4989'),
         'tagline' => 'Exhibit • Network • Sell • Collaborate',
         'about' => [
             'MEGASTRUCT AFRICA is West Africa\'s premier platform dedicated to the infrastructure, construction, and mining sectors. The expo brings together global manufacturers, industry leaders, investors, and decision-makers to explore opportunities, showcase innovations, and drive sustainable development across Africa.',
@@ -450,8 +467,8 @@ function rcc_get_messodex_data()
         'subtitle' => 'Premier Media, Stage, & Sound Technology Expo',
         'date'    => rcc_acf_option('messo_date',  '19-21 August 2026'),
         'venue'   => rcc_acf_option('messo_venue', 'Landmark Centre, Victoria Island, Lagos, Nigeria'),
-        'email'   => rcc_acf_option('messo_email', 'messodex@radiantcc.com'),
-        'phone'   => rcc_acf_option('messo_phone', '+234 903 491 4948'),
+        'email'   => rcc_acf_option('messo_email', 'messodex@radiantccafrica.com'),
+        'phone'   => rcc_acf_option('messo_phone', '+234 903 491 4989'),
         'intro'   => 'Join the largest and most influential platform connecting global leaders in media technology, professional audio, lighting, broadcasting solutions, stage engineering, creative production, and live entertainment equipment with the fast-growing West African market.',
         'tagline' => 'Exhibit • Network • Sell • Collaborate',
         'about' => [
@@ -508,7 +525,7 @@ function rcc_notice_markup($sent = false, $failed = false)
         echo '<div class="rcc-notice rcc-notice-success">Your enquiry has been sent successfully. We will get back to you shortly.</div>';
     }
     if ($failed) {
-        echo '<div class="rcc-notice rcc-notice-error">We could not send your enquiry right now. Please try again or email us directly at info@radiantcc.com.</div>';
+        echo '<div class="rcc-notice rcc-notice-error">We could not send your enquiry right now. Please try again or email us directly at info@radiantccafrica.com.</div>';
     }
 }
 
@@ -521,10 +538,24 @@ function rcc_render_list($items)
     echo '</ul>';
 }
 
+function rcc_get_booth_gallery($event_key)
+{
+    $saved_json = get_option('rcc_opt_' . $event_key . '_booth_images', '');
+    if ($saved_json) {
+        $arr = json_decode($saved_json, true);
+        if (is_array($arr) && !empty($arr)) {
+            return $arr;
+        }
+    }
+    // Fallback: use BOOTH.png
+    $fallback = rcc_upload_asset_candidates(['BOOTH.png']);
+    return $fallback ? [$fallback] : [];
+}
+
 function rcc_preloader_images()
 {
     return [
-        'rcc_logo'   => rcc_get_logo_url(),
+        'rcc_logo'   => rcc_get_logo_url('desktop'),
         'mega_logo'  => rcc_get_logo_url('mega'),
         'messo_logo' => rcc_get_logo_url('messo'),
     ];
@@ -579,9 +610,9 @@ function rcc_render_homepage()
             <div class="rcc-why-outer">
                 <div class="rcc-why-left rcc-reveal">
                     <span class="rcc-section-tag">Our Strengths</span>
-                    <h2>Why Choose<br>Radiant<br><span>Creative?</span></h2>
+                    <h2>Why Choose<br>Radiant<br><span>Creative Concepts?</span></h2>
                     <div class="rcc-why-divider"></div>
-                    <p>We are more than an events company. We are architects of opportunity — building platforms that connect Africa to the world.</p>
+                    <p>We are more than an events company. We are architects of opportunity, building platforms that connect Africa to the world.</p>
                 </div>
                 <div class="rcc-why-list">
                     <div class="rcc-why-item rcc-reveal">
@@ -692,7 +723,7 @@ function rcc_render_about_page()
                 <span class="rcc-kicker">Who We Are</span>
                 <h1>Radiant Creative<br>Concepts Limited</h1>
                 <div class="rcc-page-hero__divider"></div>
-                <p>Organizing Africa&apos;s Leading Exhibitions &amp; Trade Shows &mdash; Building Connections, Creating Opportunities.</p>
+                <p><strong>Shaping Africa&apos;s Premier Events &amp; Exhibitions</strong><br>Connecting Industries. Showcasing Innovation. Creating Lasting Opportunities.</p>
             </div>
         </div>
     </section>
@@ -935,10 +966,10 @@ function rcc_render_event_page($slug)
     $logo = rcc_get_logo_url($is_mega ? 'mega' : 'messo');
 
     $hero_img = $is_mega
-        ? rcc_upload_asset_candidates(['2026/03/MEGASTRUCT.png', 'MEGASTRUCT.png'])
-        : rcc_upload_asset_candidates(['2026/03/MESSODEX.png', 'MESSODEX.png', '2026/03/MESSEDEX.png', 'MESSEDEX.png']);
+        ? rcc_get_event_visual_url('mega')
+        : rcc_get_event_visual_url('messo');
 
-    $booth_img = rcc_upload_asset_candidates(['2026/03/BOOTH.png', 'BOOTH.png']);
+    $booth_img = rcc_upload_asset_candidates(['BOOTH.png']);
     $theme_cls = $is_mega ? 'rcc-event-hero--mega' : 'rcc-event-hero--messo';
 
     $jsonld = [
@@ -947,8 +978,8 @@ function rcc_render_event_page($slug)
         'name'                => $data['title'],
         'description'         => $data['subtitle'] . '. ' . $data['date'] . ' at ' . $data['venue'],
         'image'               => $hero_img,
-        'startDate'           => $is_mega ? '2026-10-11' : '2026-08-19',
-        'endDate'             => $is_mega ? '2026-10-13' : '2026-08-21',
+        'startDate'           => $is_mega ? '2026-10-13' : '2026-08-19',
+        'endDate'             => $is_mega ? '2026-10-15' : '2026-08-21',
         'location'            => [
             '@type'   => 'Place',
             'name'    => 'Landmark Centre, Victoria Island',
@@ -963,7 +994,7 @@ function rcc_render_event_page($slug)
         'organizer'           => [
             '@type' => 'Organization',
             'name'  => 'Radiant Creative Concepts Limited',
-            'url'   => 'https://www.radiantcc.com',
+            'url'   => $site['website_url'],
             'email' => $site['email'],
             'telephone' => $site['phone'],
         ],
@@ -1113,6 +1144,8 @@ function rcc_render_event_page($slug)
     </section>
 
     <!-- ═══ BOOTH GALLERY (CAROUSEL) ═══ -->
+    <?php $booth_gallery = rcc_get_booth_gallery($is_mega ? 'mega' : 'messo'); ?>
+    <?php if (!empty($booth_gallery)) : ?>
     <section id="gallery" class="rcc-ev-section rcc-ev-section--dark">
         <div class="rcc-shell">
             <div class="rcc-ev-section-header rcc-reveal">
@@ -1124,12 +1157,13 @@ function rcc_render_event_page($slug)
                 <button class="rcc-carousel__btn rcc-carousel__prev" aria-label="Previous">&#8249;</button>
                 <div class="rcc-carousel__track-wrap">
                     <div class="rcc-carousel__track">
-                        <?php for ($ci = 0; $ci < 5; $ci++) : ?>
+                        <?php foreach ($booth_gallery as $bi => $booth_slide) :
+                            if (!$booth_slide) { continue; } ?>
                             <div class="rcc-carousel__slide">
-                                <img src="<?php echo esc_url($booth_img); ?>"
-                                     alt="Exhibition booth <?php echo esc_attr($ci + 1); ?>">
+                                <img src="<?php echo esc_url($booth_slide); ?>"
+                                     alt="Exhibition booth <?php echo esc_attr($bi + 1); ?>">
                             </div>
-                        <?php endfor; ?>
+                        <?php endforeach; ?>
                     </div>
                 </div>
                 <button class="rcc-carousel__btn rcc-carousel__next" aria-label="Next">&#8250;</button>
@@ -1137,6 +1171,7 @@ function rcc_render_event_page($slug)
             </div>
         </div>
     </section>
+    <?php endif; ?>
 
     <!-- ═══ BOTTOM CTA ═══ -->
     <section class="rcc-ev-cta <?php echo esc_attr($theme_cls); ?>">
@@ -1163,12 +1198,12 @@ function rcc_render_event_page($slug)
                 </div>
                 <div class="rcc-ev-contact-group">
                     <h3>MEGASTRUCT</h3>
-                    <p>&#9993; <?php echo esc_html(rcc_acf_option('mega_email', 'megastruct@radiantcc.com')); ?></p>
+                    <p>&#9993; <?php echo esc_html(rcc_acf_option('mega_email', 'megastruct@radiantccafrica.com')); ?></p>
                     <p>&#9742; <?php echo esc_html(rcc_acf_option('mega_phone', $site['phone'])); ?></p>
                 </div>
                 <div class="rcc-ev-contact-group">
                     <h3>MESSODEX</h3>
-                    <p>&#9993; <?php echo esc_html(rcc_acf_option('messo_email', 'messodex@radiantcc.com')); ?></p>
+                    <p>&#9993; <?php echo esc_html(rcc_acf_option('messo_email', 'messodex@radiantccafrica.com')); ?></p>
                     <p>&#9742; <?php echo esc_html(rcc_acf_option('messo_phone', $site['phone'])); ?></p>
                 </div>
                 <div class="rcc-ev-contact-social">
@@ -1244,22 +1279,97 @@ function rcc_render_book_a_stand_page()
     <?php
 }
 
-function rcc_render_gallery_page()
+function rcc_gallery_get_images()
 {
-    // Fetch ACF gallery images if available
-    $acf_images = [];
+    $extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+    // Helper: scan a folder and return image entries
+    $scan_folder = function ($dir, $base_url) use ($extensions) {
+        $result = [];
+        if (!is_dir($dir)) {
+            return $result;
+        }
+        $files = @scandir($dir);
+        if (!$files) {
+            return $result;
+        }
+        sort($files); // alphabetical so order is predictable
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..') {
+                continue;
+            }
+            $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+            if (!in_array($ext, $extensions, true)) {
+                continue;
+            }
+            $result[] = [
+                'url' => trailingslashit($base_url) . $file,
+                'alt' => pathinfo($file, PATHINFO_FILENAME),
+            ];
+        }
+        return $result;
+    };
+
+    // 1. Admin-uploaded images via RCC Settings -> Gallery page
+    $saved_json = get_option('rcc_opt_gallery_images', '');
+    if ($saved_json) {
+        $saved = json_decode($saved_json, true);
+        if (is_array($saved) && !empty($saved)) {
+            $result = [];
+            foreach ($saved as $item) {
+                $url = is_string($item) ? $item : ($item['url'] ?? '');
+                $alt = is_string($item) ? '' : ($item['alt'] ?? '');
+                if ($url) {
+                    $result[] = ['url' => $url, 'alt' => $alt];
+                }
+            }
+            if (!empty($result)) {
+                return $result;
+            }
+        }
+    }
+
+    // 2. Theme assets/gallery/ folder fallback
+    $gallery_dir = get_template_directory() . '/assets/gallery';
+    $gallery_url = get_template_directory_uri() . '/assets/gallery';
+    $theme_gallery = $scan_folder($gallery_dir, $gallery_url);
+    if (!empty($theme_gallery)) {
+        return $theme_gallery;
+    }
+
+    // 3. ACF gallery field (if ACF is active)
     if (function_exists('get_field')) {
         $gallery_page = get_page_by_path('gallery');
         if ($gallery_page) {
-            $acf_images = get_field('gallery_images', $gallery_page->ID) ?: [];
+            $acf = get_field('gallery_images', $gallery_page->ID) ?: [];
+            if (!empty($acf)) {
+                $result = [];
+                foreach ($acf as $img) {
+                    $url = is_array($img) ? ($img['sizes']['large'] ?? $img['url'] ?? '') : $img;
+                    $alt = is_array($img) ? ($img['alt'] ?? '') : '';
+                    if ($url) {
+                        $result[] = ['url' => $url, 'alt' => $alt];
+                    }
+                }
+                if (!empty($result)) {
+                    return $result;
+                }
+            }
         }
     }
+
+    return [];
+}
+
+function rcc_render_gallery_page()
+{
+    $images = rcc_gallery_get_images();
     ?>
     <section class="rcc-page-hero">
         <div class="rcc-shell">
             <div class="rcc-page-hero__inner">
                 <span class="rcc-kicker">Media</span>
-                <h1>Visual Highlights</h1>
+                <h1>Gallery</h1>
                 <div class="rcc-page-hero__divider"></div>
                 <p>Booth designs, live event moments, and partner visibility from our flagship exhibitions.</p>
             </div>
@@ -1268,40 +1378,17 @@ function rcc_render_gallery_page()
 
     <section class="rcc-section">
         <div class="rcc-shell">
-            <?php if (!empty($acf_images)) : ?>
+            <?php if (!empty($images)) : ?>
                 <div class="rcc-masonry-gallery">
-                    <?php foreach ($acf_images as $img) :
-                        $url  = is_array($img) ? ($img['sizes']['large'] ?? $img['url'] ?? '') : $img;
-                        $alt  = is_array($img) ? ($img['alt'] ?? '') : '';
-                        if (!$url) { continue; }
-                    ?>
+                    <?php foreach ($images as $img) : ?>
                         <div class="rcc-masonry-gallery__item">
-                            <img src="<?php echo esc_url($url); ?>" alt="<?php echo esc_attr($alt); ?>" loading="lazy">
+                            <img src="<?php echo esc_url($img['url']); ?>" alt="<?php echo esc_attr($img['alt']); ?>" loading="lazy">
                         </div>
                     <?php endforeach; ?>
                 </div>
             <?php else : ?>
-                <?php
-                $groups = [
-                    'Photos Of Booths'     => ['Shell Scheme (Standard Booth)', 'Custom Booths'],
-                    'Live Events Pictures' => ['Conference sessions', 'Networking moments', 'Product showcases'],
-                    'Partners/Sponsors'    => ['Featured partner wall', 'Sponsor branding', 'Collaboration highlights'],
-                ];
-                foreach ($groups as $title => $items) : ?>
-                    <article class="rcc-card" style="margin-bottom:2rem;">
-                        <h2><?php echo esc_html($title); ?></h2>
-                        <div class="rcc-gallery-grid">
-                            <?php foreach ($items as $item) : ?>
-                                <div class="rcc-gallery-item">
-                                    <img class="rcc-gallery-item__visual-image" src="<?php echo esc_url(rcc_upload_asset_candidates(['2026/03/BOOTH.png', 'BOOTH.png'])); ?>" alt="<?php echo esc_attr($item); ?>">
-                                    <span><?php echo esc_html($item); ?></span>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </article>
-                <?php endforeach; ?>
-                <p style="text-align:center;color:var(--rcc-muted);font-size:0.875rem;margin-top:1rem;">
-                    <strong>Tip:</strong> Edit the <em>Gallery</em> page in WordPress and upload images in the <em>Gallery Images</em> field to populate this section.
+                <p style="text-align:center;color:var(--rcc-muted);padding:3rem 0;">
+                    No gallery images yet. Go to <strong>RCC Settings &rarr; Gallery</strong> in the WordPress admin to upload photos.
                 </p>
             <?php endif; ?>
         </div>
@@ -1393,12 +1480,12 @@ function rcc_render_contact_page()
                     </div>
                     <div class="rcc-enquiry-contact__group">
                         <strong>MEGASTRUCT</strong>
-                        <p>Email: megastruct@radiantcc.com</p>
+                        <p>Email: megastruct@radiantccafrica.com</p>
                         <p>Phone: <?php echo esc_html($site['phone']); ?></p>
                     </div>
                     <div class="rcc-enquiry-contact__group">
                         <strong>MESSODEX</strong>
-                        <p>Email: messodex@radiantcc.com</p>
+                        <p>Email: messodex@radiantccafrica.com</p>
                         <p>Phone: <?php echo esc_html($site['phone']); ?></p>
                     </div>
                     <div class="rcc-home-contact__socials" style="margin-top:1.5rem;">
@@ -1549,59 +1636,186 @@ add_filter('template_include', function ($template) {
 /* ============================================================
    SEO — DYNAMIC META TAGS
    ============================================================ */
-add_filter('document_title_parts', function ($parts) {
+function rcc_seo_pages()
+{
+    $site = rcc_site_config();
+
+    return [
+        '' => [
+            'title'       => 'Radiant Creative Concepts Limited | Events, Exhibitions & Trade Shows in Nigeria',
+            'description' => 'Radiant Creative Concepts Limited is an event management and exhibitions company organizing corporate events, trade shows, and international exhibitions across Nigeria and Africa.',
+            'image'       => rcc_upload_asset_candidates(['hero.png']),
+            'url'         => home_url('/'),
+            'type'        => 'website',
+            'keywords'    => 'Radiant Creative Concepts Limited, RCC, event management Nigeria, exhibitions Nigeria, trade shows Africa, corporate events Lagos',
+        ],
+        'about-us' => [
+            'title'       => 'About Radiant Creative Concepts Limited | Event & Exhibition Company',
+            'description' => 'Learn about Radiant Creative Concepts Limited, our vision, mission, event expertise, and how we deliver premium exhibitions and corporate events across Africa.',
+            'image'       => rcc_get_logo_url(),
+            'url'         => rcc_get_page_url('about-us'),
+            'type'        => 'article',
+            'keywords'    => 'about Radiant Creative Concepts, event company Nigeria, exhibition organizers Africa',
+        ],
+        'exhibitions' => [
+            'title'       => 'Our Events | Radiant Creative Concepts Limited',
+            'description' => 'Explore RCC exhibitions and trade shows including MEGASTRUCT AFRICA and MESSODEX WEST AFRICA, connecting industries, buyers, exhibitors, and investors.',
+            'image'       => rcc_get_event_visual_url('mega'),
+            'url'         => rcc_get_page_url('exhibitions'),
+            'type'        => 'website',
+            'keywords'    => 'events by RCC, exhibitions Nigeria, trade shows Lagos, Megastruct Africa, Messodex West Africa',
+        ],
+        'gallery' => [
+            'title'       => 'Gallery | Radiant Creative Concepts Limited',
+            'description' => 'View gallery highlights from RCC exhibition booths, live events, stage production setups, and event brand experiences.',
+            'image'       => rcc_upload_asset_candidates(['BOOTH.png']),
+            'url'         => rcc_get_page_url('gallery'),
+            'type'        => 'article',
+            'keywords'    => 'event gallery Nigeria, exhibition booth gallery, RCC gallery',
+        ],
+        'contact-us' => [
+            'title'       => 'Contact Radiant Creative Concepts Limited | Bookings & Exhibition Enquiries',
+            'description' => 'Contact Radiant Creative Concepts Limited for bookings, partnerships, vendor collaboration, and exhibition stand enquiries.',
+            'image'       => rcc_get_logo_url(),
+            'url'         => rcc_get_page_url('contact-us'),
+            'type'        => 'website',
+            'keywords'    => 'contact RCC, exhibition enquiries Nigeria, event bookings Lagos',
+        ],
+        'book-a-stand' => [
+            'title'       => 'Book a Stand | Radiant Creative Concepts Limited',
+            'description' => 'Reserve exhibition space for MESSODEX WEST AFRICA or MEGASTRUCT AFRICA and connect with qualified buyers, partners, and industry leaders.',
+            'image'       => rcc_upload_asset_candidates(['BOOTH.png']),
+            'url'         => rcc_get_page_url('book-a-stand'),
+            'type'        => 'website',
+            'keywords'    => 'book exhibition stand Nigeria, trade fair booth booking, MESSODEX stand, MEGASTRUCT stand',
+        ],
+        'megastruct-africa' => [
+            'title'       => 'MEGASTRUCT AFRICA 2026 | Infrastructure, Construction & Mining Expo in Lagos',
+            'description' => 'MEGASTRUCT AFRICA 2026 is West Africa\'s premier infrastructure, construction and mining equipment expo holding at Landmark Centre, Victoria Island, Lagos, Nigeria.',
+            'image'       => rcc_upload_asset_candidates(['MEGASTRUCT.png']),
+            'url'         => rcc_get_page_url('megastruct-africa'),
+            'type'        => 'event',
+            'keywords'    => 'Megastruct Africa, construction expo Africa, mining equipment expo Nigeria, infrastructure exhibition Lagos',
+        ],
+        'messodex-west-africa' => [
+            'title'       => 'MESSODEX WEST AFRICA 2026 | Media, Stage & Sound Technology Expo in Lagos',
+            'description' => 'MESSODEX WEST AFRICA 2026 is West Africa\'s leading media, stage and sound technology expo for broadcast, AV, lighting, production, and live event innovation.',
+            'image'       => rcc_get_event_visual_url('messo'),
+            'url'         => rcc_get_page_url('messodex-west-africa'),
+            'type'        => 'event',
+            'keywords'    => 'Messodex West Africa, media technology expo Africa, sound exhibition Nigeria, stage lighting expo Lagos',
+        ],
+    ];
+}
+
+function rcc_get_seo_context()
+{
     $slug = rcc_get_current_slug();
-    if ($slug === 'megastruct-africa') {
-        $parts['title'] = 'MEGASTRUCT AFRICA 2026 — Infrastructure, Construction & Mining Expo | Lagos';
-    } elseif ($slug === 'messodex-west-africa') {
-        $parts['title'] = 'MESSODEX WEST AFRICA 2026 — Media, Stage & Sound Technology Expo | Lagos';
+    $pages = rcc_seo_pages();
+
+    if (is_front_page()) {
+        return $pages[''];
+    }
+
+    return $pages[$slug] ?? null;
+}
+
+add_filter('document_title_parts', function ($parts) {
+    $seo = rcc_get_seo_context();
+    if ($seo && !empty($seo['title'])) {
+        $parts['title'] = $seo['title'];
     }
     return $parts;
 });
 
 add_action('wp_head', function () {
-    $slug = rcc_get_current_slug();
-
-    $map = [
-        'megastruct-africa' => [
-            'title'       => 'MEGASTRUCT AFRICA 2026',
-            'description' => 'West Africa\'s premier infrastructure, construction & mining expo. October 11–13, 2026 at Landmark Centre, Victoria Island, Lagos. Exhibit, network and connect with industry leaders.',
-            'image_fn'    => function () { return rcc_upload_asset_candidates(['2026/03/MEGASTRUCT.png', 'MEGASTRUCT.png']); },
-            'url_slug'    => 'megastruct-africa',
-        ],
-        'messodex-west-africa' => [
-            'title'       => 'MESSODEX WEST AFRICA 2026',
-            'description' => 'West Africa\'s premier media, stage & sound technology expo. August 19–21, 2026 at Landmark Centre, Victoria Island, Lagos. Connect global AV and media brands with African buyers.',
-            'image_fn'    => function () { return rcc_upload_asset_candidates(['2026/03/MESSODEX.png', 'MESSODEX.png']); },
-            'url_slug'    => 'messodex-west-africa',
-        ],
-    ];
-
-    if (!isset($map[$slug])) {
+    $seo = rcc_get_seo_context();
+    if (!$seo) {
         return;
     }
 
-    $m   = $map[$slug];
-    $img = ($m['image_fn'])();
-    $url = esc_url(rcc_get_page_url($m['url_slug']));
-    $t   = esc_attr($m['title']);
-    $d   = esc_attr($m['description']);
+    $site = rcc_site_config();
+    $title = esc_attr($seo['title']);
+    $description = esc_attr($seo['description']);
+    $url = esc_url($seo['url']);
+    $image = !empty($seo['image']) ? esc_url($seo['image']) : '';
+    $svg_logo = rcc_theme_svg_logo_url();
+    $org_logo = $svg_logo ?: rcc_get_logo_url();
+    $type = $seo['type'] ?? 'website';
 
-    echo '<meta name="description" content="' . $d . '">' . "\n";
-    echo '<meta property="og:title" content="' . $t . '">' . "\n";
-    echo '<meta property="og:description" content="' . $d . '">' . "\n";
-    echo '<meta property="og:type" content="event">' . "\n";
-    echo '<meta property="og:url" content="' . $url . '">' . "\n";
-    if ($img) {
-        echo '<meta property="og:image" content="' . esc_url($img) . '">' . "\n";
-    }
-    echo '<meta name="twitter:card" content="summary_large_image">' . "\n";
-    echo '<meta name="twitter:title" content="' . $t . '">' . "\n";
-    echo '<meta name="twitter:description" content="' . $d . '">' . "\n";
-    if ($img) {
-        echo '<meta name="twitter:image" content="' . esc_url($img) . '">' . "\n";
-    }
+    echo '<meta name="description" content="' . $description . '">' . "\n";
+    echo '<meta name="keywords" content="' . esc_attr($seo['keywords'] ?? '') . '">' . "\n";
+    echo '<meta name="robots" content="index, follow, max-image-preview:large">' . "\n";
     echo '<link rel="canonical" href="' . $url . '">' . "\n";
+
+    echo '<meta property="og:site_name" content="' . esc_attr($site['company']) . '">' . "\n";
+    echo '<meta property="og:locale" content="en_NG">' . "\n";
+    echo '<meta property="og:title" content="' . $title . '">' . "\n";
+    echo '<meta property="og:description" content="' . $description . '">' . "\n";
+    echo '<meta property="og:type" content="' . esc_attr($type) . '">' . "\n";
+    echo '<meta property="og:url" content="' . $url . '">' . "\n";
+    if ($image) {
+        echo '<meta property="og:image" content="' . $image . '">' . "\n";
+    }
+
+    echo '<meta name="twitter:card" content="summary_large_image">' . "\n";
+    echo '<meta name="twitter:title" content="' . $title . '">' . "\n";
+    echo '<meta name="twitter:description" content="' . $description . '">' . "\n";
+    if ($image) {
+        echo '<meta name="twitter:image" content="' . $image . '">' . "\n";
+    }
+
+    if ($svg_logo) {
+        echo '<link rel="icon" type="image/svg+xml" href="' . esc_url($svg_logo) . '">' . "\n";
+    }
+
+    $org_schema = [
+        '@context' => 'https://schema.org',
+        '@type'    => 'Organization',
+        'name'     => $site['company'],
+        'legalName'=> 'Radiant Creative Concepts Limited',
+        'alternateName' => [
+            'Radiant Creative Concepts Ltd.',
+            'Radiant Creative Concepts',
+            'RCC',
+        ],
+        'url'      => home_url('/'),
+        'logo'     => $org_logo,
+        'telephone'=> $site['phone'],
+        'email'    => $site['email'],
+        'address'  => [
+            '@type'           => 'PostalAddress',
+            'streetAddress'   => $site['address'],
+            'addressLocality' => 'Mowe',
+            'addressRegion'   => 'Ogun State',
+            'addressCountry'  => 'NG',
+        ],
+        'sameAs'   => array_values(array_filter(array_map(function ($social) {
+            return !empty($social['url']) && $social['url'] !== '#' ? $social['url'] : null;
+        }, $site['socials']))),
+    ];
+
+    $website_schema = [
+        '@context' => 'https://schema.org',
+        '@type'    => 'WebSite',
+        'name'     => $site['company'],
+        'alternateName' => [
+            'Radiant Creative Concepts Limited',
+            'Radiant Creative Concepts Ltd.',
+        ],
+        'url'      => home_url('/'),
+        'publisher'=> [
+            '@type' => 'Organization',
+            'name'  => $site['company'],
+            'logo'  => [
+                '@type' => 'ImageObject',
+                'url'   => $org_logo,
+            ],
+        ],
+    ];
+
+    echo '<script type="application/ld+json">' . wp_json_encode($org_schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
+    echo '<script type="application/ld+json">' . wp_json_encode($website_schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
 }, 5);
 
 /* ============================================================
@@ -1622,6 +1836,7 @@ add_action('admin_menu', function () {
     add_submenu_page('rcc-settings', 'General Settings', 'General', 'manage_options', 'rcc-settings', 'rcc_admin_page_general');
     add_submenu_page('rcc-settings', 'MEGASTRUCT Settings', 'MEGASTRUCT', 'manage_options', 'rcc-mega-settings', 'rcc_admin_page_mega');
     add_submenu_page('rcc-settings', 'MESSODEX Settings', 'MESSODEX', 'manage_options', 'rcc-messo-settings', 'rcc_admin_page_messo');
+    add_submenu_page('rcc-settings', 'Gallery Images', 'Gallery', 'manage_options', 'rcc-gallery-settings', 'rcc_admin_page_gallery');
 });
 
 add_action('admin_enqueue_scripts', function ($hook) {
@@ -1652,6 +1867,116 @@ add_action('admin_enqueue_scripts', function ($hook) {
     ');
 });
 
+function rcc_admin_booth_gallery_section($option_key, $js_var)
+{
+    $existing = [];
+    $saved_json = get_option('rcc_opt_' . $option_key, '');
+    if ($saved_json) {
+        $decoded = json_decode($saved_json, true);
+        if (is_array($decoded)) {
+            $existing = $decoded;
+        }
+    }
+    ?>
+    <hr style="margin:2rem 0;">
+    <h2>Booth Gallery (Carousel Images)</h2>
+    <p>These images appear in the <strong>Booth Gallery</strong> carousel on the event page.<br>
+       Add, remove, and arrange the order with the arrow buttons. The first image appears first in the live slider. Click <em>Save</em> above to apply changes.</p>
+    <input type="hidden" name="<?php echo esc_attr($option_key); ?>" id="<?php echo esc_attr($js_var . '_data'); ?>"
+           value="<?php echo esc_attr(wp_json_encode($existing)); ?>">
+    <div id="<?php echo esc_attr($js_var . '_thumbs'); ?>" style="display:flex;flex-wrap:wrap;gap:12px;margin:1rem 0 1.25rem;">
+        <?php foreach ($existing as $index => $url) : ?>
+            <div class="rcc-booth-thumb" style="position:relative;width:140px;padding-top:28px;">
+                <div style="position:absolute;top:0;left:0;display:flex;gap:4px;">
+                    <button type="button" class="button rcc-booth-move"
+                            data-var="<?php echo esc_attr($js_var); ?>"
+                            data-index="<?php echo (int) $index; ?>"
+                            data-dir="-1"
+                            style="min-height:0;line-height:1.6;padding:0 8px;">&#8592;</button>
+                    <button type="button" class="button rcc-booth-move"
+                            data-var="<?php echo esc_attr($js_var); ?>"
+                            data-index="<?php echo (int) $index; ?>"
+                            data-dir="1"
+                            style="min-height:0;line-height:1.6;padding:0 8px;">&#8594;</button>
+                </div>
+                <img src="<?php echo esc_url($url); ?>"
+                     style="width:140px;height:105px;object-fit:cover;display:block;border:1px solid #ddd;border-radius:4px;">
+                <button type="button" class="button rcc-booth-remove"
+                        data-var="<?php echo esc_attr($js_var); ?>"
+                        data-url="<?php echo esc_attr($url); ?>"
+                        style="position:absolute;top:32px;right:4px;padding:0 6px;line-height:1.6;min-height:0;background:#c00;color:#fff;border-color:#a00;">&times;</button>
+            </div>
+        <?php endforeach; ?>
+    </div>
+    <button type="button" class="button button-secondary rcc-booth-add" data-var="<?php echo esc_attr($js_var); ?>">
+        &#43; Add Booth Photos
+    </button>
+    <script>
+    jQuery(function($){
+        var <?php echo esc_js($js_var); ?> = <?php echo wp_json_encode($existing); ?>;
+
+        function refreshBooth(varName, data) {
+            var thumbsId = '#' + varName + '_thumbs';
+            var dataId   = '#' + varName + '_data';
+            $(dataId).val(JSON.stringify(data));
+            var html = '';
+            data.forEach(function(url, index) {
+                html += '<div class="rcc-booth-thumb" style="position:relative;width:140px;padding-top:28px;">'
+                    + '<div style="position:absolute;top:0;left:0;display:flex;gap:4px;">'
+                    + '<button type="button" class="button rcc-booth-move" data-var="'+varName+'" data-index="'+index+'" data-dir="-1" style="min-height:0;line-height:1.6;padding:0 8px;">&#8592;</button>'
+                    + '<button type="button" class="button rcc-booth-move" data-var="'+varName+'" data-index="'+index+'" data-dir="1" style="min-height:0;line-height:1.6;padding:0 8px;">&#8594;</button>'
+                    + '</div>'
+                    + '<img src="'+url+'" style="width:140px;height:105px;object-fit:cover;display:block;border:1px solid #ddd;border-radius:4px;">'
+                    + '<button type="button" class="button rcc-booth-remove" data-var="'+varName+'" data-url="'+url+'"'
+                    + ' style="position:absolute;top:32px;right:4px;padding:0 6px;line-height:1.6;min-height:0;background:#c00;color:#fff;border-color:#a00;">&times;</button>'
+                    + '</div>';
+            });
+            $(thumbsId).html(html);
+        }
+
+        $(document).on('click', '.rcc-booth-add[data-var="<?php echo esc_js($js_var); ?>"]', function(e) {
+            e.preventDefault();
+            var varName = $(this).data('var');
+            var frame = wp.media({title: 'Add Booth Photos', multiple: true, library: {type: 'image'}});
+            frame.on('select', function() {
+                frame.state().get('selection').each(function(att) {
+                    var url = att.toJSON().url;
+                    if (url && <?php echo esc_js($js_var); ?>.indexOf(url) === -1) {
+                        <?php echo esc_js($js_var); ?>.push(url);
+                    }
+                });
+                refreshBooth(varName, <?php echo esc_js($js_var); ?>);
+            });
+            frame.open();
+        });
+
+        $(document).on('click', '.rcc-booth-remove[data-var="<?php echo esc_js($js_var); ?>"]', function(e) {
+            e.preventDefault();
+            var url = $(this).data('url');
+            var varName = $(this).data('var');
+            <?php echo esc_js($js_var); ?> = <?php echo esc_js($js_var); ?>.filter(function(u) { return u !== url; });
+            refreshBooth(varName, <?php echo esc_js($js_var); ?>);
+        });
+        $(document).on('click', '.rcc-booth-move[data-var="<?php echo esc_js($js_var); ?>"]', function(e) {
+            e.preventDefault();
+            var dir = parseInt($(this).data('dir'), 10);
+            var index = parseInt($(this).data('index'), 10);
+            var varName = $(this).data('var');
+            var data = <?php echo esc_js($js_var); ?>;
+            var swapIndex = index + dir;
+            if (swapIndex < 0 || swapIndex >= data.length) {
+                return;
+            }
+            var temp = data[index];
+            data[index] = data[swapIndex];
+            data[swapIndex] = temp;
+            refreshBooth(varName, data);
+        });
+    });
+    </script>
+    <?php
+}
+
 function rcc_admin_save_settings($fields, $nonce_key)
 {
     if (
@@ -1674,11 +1999,13 @@ function rcc_admin_field_row($type, $key, $label, $default = '', $extra = [])
         $val = $default;
     }
     $id = 'rcc_field_' . esc_attr($key);
+    $placeholder = $extra['placeholder'] ?? $default;
+    $description = $extra['description'] ?? '';
     echo '<tr>';
     echo '<th scope="row"><label for="' . $id . '">' . esc_html($label) . '</label></th>';
     echo '<td>';
     if ($type === 'textarea') {
-        echo '<textarea id="' . $id . '" name="' . esc_attr($key) . '" rows="' . (int) ($extra['rows'] ?? 3) . '" class="large-text">' . esc_textarea($val) . '</textarea>';
+        echo '<textarea id="' . $id . '" name="' . esc_attr($key) . '" rows="' . (int) ($extra['rows'] ?? 3) . '" class="large-text" placeholder="' . esc_attr($placeholder) . '">' . esc_textarea($val) . '</textarea>';
     } elseif ($type === 'image') {
         $img_url = get_option('rcc_opt_' . $key, '');
         echo '<input type="hidden" id="' . $id . '" name="' . esc_attr($key) . '" value="' . esc_attr($img_url) . '">';
@@ -1692,7 +2019,10 @@ function rcc_admin_field_row($type, $key, $label, $default = '', $extra = [])
         echo '<button type="button" class="button rcc-img-upload" data-field="' . $id . '" data-prev="prev_' . $id . '">Upload / Change Image</button> ';
         echo '<button type="button" class="button rcc-img-remove" data-field="' . $id . '" data-prev="prev_' . $id . '">Remove</button>';
     } else {
-        echo '<input type="text" id="' . $id . '" name="' . esc_attr($key) . '" value="' . esc_attr($val) . '" class="regular-text">';
+        echo '<input type="text" id="' . $id . '" name="' . esc_attr($key) . '" value="' . esc_attr($val) . '" class="regular-text" placeholder="' . esc_attr($placeholder) . '">';
+    }
+    if ($description) {
+        echo '<p class="description">' . esc_html($description) . '</p>';
     }
     echo '</td>';
     echo '</tr>';
@@ -1712,14 +2042,14 @@ function rcc_admin_page_general()
             <?php wp_nonce_field('rcc_save_rcc_general', 'rcc_general'); ?>
             <table class="form-table">
                 <?php
-                rcc_admin_field_row('text',     'rcc_phone',            'Phone Number',    '+234 903 491 4948');
-                rcc_admin_field_row('text',     'rcc_email',            'Main Email',      'info@radiantcc.com');
-                rcc_admin_field_row('textarea', 'rcc_address',          'Office Address',  'Thuraya Crescent, Along Lagos-Ibadan Expressway, Mowe, Ogun State, Nigeria.', ['rows' => 3]);
-                rcc_admin_field_row('text',     'rcc_social_facebook',  'Facebook URL');
-                rcc_admin_field_row('text',     'rcc_social_instagram', 'Instagram URL');
-                rcc_admin_field_row('text',     'rcc_social_youtube',   'YouTube URL');
-                rcc_admin_field_row('text',     'rcc_social_linkedin',  'LinkedIn URL');
-                rcc_admin_field_row('image',    'rcc_logo',             'RCC Logo');
+                rcc_admin_field_row('text',     'rcc_phone',            'Phone Number',    '+234 903 491 4989', ['description' => 'Main public contact number shown across the website and SEO organization markup.']);
+                rcc_admin_field_row('text',     'rcc_email',            'Main Email',      'info@radiantccafrica.com', ['description' => 'Primary business email for website contact, event enquiries, and search engine business details.']);
+                rcc_admin_field_row('textarea', 'rcc_address',          'Office Address',  'RADIANT CREATIVE CONCEPTS LIMITED (EVENTS & EXHIBITIONS), Thuraya Crescent, Along Lagos-Ibadan Expressway, Mowe, Ogun State, Nigeria.', ['rows' => 3, 'description' => 'Formal office address used in the footer, contact page, and business schema markup.']);
+                rcc_admin_field_row('text',     'rcc_social_facebook',  'Facebook URL',    'https://facebook.com/radiantccafrica', ['description' => 'Full Facebook page URL.']);
+                rcc_admin_field_row('text',     'rcc_social_instagram', 'Instagram URL',   'https://instagram.com/radiantccafrica', ['description' => 'Full Instagram profile URL.']);
+                rcc_admin_field_row('text',     'rcc_social_youtube',   'YouTube URL',     'https://youtube.com/@radiantccafrica', ['description' => 'Full YouTube channel URL.']);
+                rcc_admin_field_row('text',     'rcc_social_linkedin',  'LinkedIn URL',    'https://linkedin.com/company/radiantccafrica', ['description' => 'Full LinkedIn company page URL.']);
+                rcc_admin_field_row('image',    'rcc_logo',             'RCC Logo', '', ['description' => 'Optional admin logo override. For live theme-only export, keep the master brand file inside assets/images, especially rcc.svg.']);
                 ?>
             </table>
             <?php submit_button('Save General Settings'); ?>
@@ -1732,6 +2062,17 @@ function rcc_admin_page_mega()
 {
     $fields = ['mega_date', 'mega_venue', 'mega_email', 'mega_phone', 'mega_logo'];
     $saved  = rcc_admin_save_settings($fields, 'rcc_mega');
+
+    // Save booth gallery images
+    if (
+        isset($_POST['rcc_mega']) &&
+        wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['rcc_mega'])), 'rcc_save_rcc_mega') &&
+        isset($_POST['mega_booth_images'])
+    ) {
+        $arr = json_decode(wp_unslash($_POST['mega_booth_images']), true);
+        if (!is_array($arr)) { $arr = []; }
+        update_option('rcc_opt_mega_booth_images', wp_json_encode(array_values(array_filter(array_map('esc_url_raw', $arr)))));
+    }
     ?>
     <div class="wrap">
         <h1>MEGASTRUCT AFRICA Settings</h1>
@@ -1742,13 +2083,14 @@ function rcc_admin_page_mega()
             <?php wp_nonce_field('rcc_save_rcc_mega', 'rcc_mega'); ?>
             <table class="form-table">
                 <?php
-                rcc_admin_field_row('text',  'mega_date',  'Event Date',  '11th – 13th October 2026');
-                rcc_admin_field_row('text',  'mega_venue', 'Venue',       'Landmark Centre, Victoria Island, Lagos, Nigeria');
-                rcc_admin_field_row('text',  'mega_email', 'Event Email', 'megastruct@radiantcc.com');
-                rcc_admin_field_row('text',  'mega_phone', 'Event Phone', '+234 903 491 4948');
-                rcc_admin_field_row('image', 'mega_logo',  'MEGASTRUCT Logo (shown on event hero page)');
+                rcc_admin_field_row('text',  'mega_date',  'Event Date',  '11th - 13th October 2026', ['description' => 'Formal event date shown on the MEGASTRUCT AFRICA page and structured event data.']);
+                rcc_admin_field_row('text',  'mega_venue', 'Venue',       'Landmark Centre, Victoria Island, Lagos, Nigeria', ['description' => 'Official venue text for the event hero, contact prompts, and schema markup.']);
+                rcc_admin_field_row('text',  'mega_email', 'Event Email', 'megastruct@radiantccafrica.com', ['description' => 'Primary email used for MEGASTRUCT enquiries. Create this mailbox on your hosting/email provider before going live.']);
+                rcc_admin_field_row('text',  'mega_phone', 'Event Phone', '+234 903 491 4989', ['description' => 'Direct event phone or WhatsApp line.']);
+                rcc_admin_field_row('image', 'mega_logo',  'MEGASTRUCT Logo (shown on event hero page)', '', ['description' => 'Optional admin override. For portable live deployment, keep the MEGASTRUCT logo file in assets/images.']);
                 ?>
             </table>
+            <?php rcc_admin_booth_gallery_section('mega_booth_images', 'rcc_mega_booth'); ?>
             <?php submit_button('Save MEGASTRUCT Settings'); ?>
         </form>
     </div>
@@ -1759,6 +2101,17 @@ function rcc_admin_page_messo()
 {
     $fields = ['messo_date', 'messo_venue', 'messo_email', 'messo_phone', 'messo_logo'];
     $saved  = rcc_admin_save_settings($fields, 'rcc_messo');
+
+    // Save booth gallery images
+    if (
+        isset($_POST['rcc_messo']) &&
+        wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['rcc_messo'])), 'rcc_save_rcc_messo') &&
+        isset($_POST['messo_booth_images'])
+    ) {
+        $arr = json_decode(wp_unslash($_POST['messo_booth_images']), true);
+        if (!is_array($arr)) { $arr = []; }
+        update_option('rcc_opt_messo_booth_images', wp_json_encode(array_values(array_filter(array_map('esc_url_raw', $arr)))));
+    }
     ?>
     <div class="wrap">
         <h1>MESSODEX WEST AFRICA Settings</h1>
@@ -1769,16 +2122,168 @@ function rcc_admin_page_messo()
             <?php wp_nonce_field('rcc_save_rcc_messo', 'rcc_messo'); ?>
             <table class="form-table">
                 <?php
-                rcc_admin_field_row('text',  'messo_date',  'Event Date',  '19–21 August 2026');
-                rcc_admin_field_row('text',  'messo_venue', 'Venue',       'Landmark Centre, Victoria Island, Lagos, Nigeria');
-                rcc_admin_field_row('text',  'messo_email', 'Event Email', 'messodex@radiantcc.com');
-                rcc_admin_field_row('text',  'messo_phone', 'Event Phone', '+234 903 491 4948');
-                rcc_admin_field_row('image', 'messo_logo',  'MESSODEX Logo (shown on event hero page)');
+                rcc_admin_field_row('text',  'messo_date',  'Event Date',  '19-21 August 2026', ['description' => 'Formal event date shown on the MESSODEX WEST AFRICA page and structured event data.']);
+                rcc_admin_field_row('text',  'messo_venue', 'Venue',       'Landmark Centre, Victoria Island, Lagos, Nigeria', ['description' => 'Official venue text for the event hero, CTA sections, and schema markup.']);
+                rcc_admin_field_row('text',  'messo_email', 'Event Email', 'messodex@radiantccafrica.com', ['description' => 'Primary email used for MESSODEX enquiries. Create this mailbox on your hosting/email provider before going live.']);
+                rcc_admin_field_row('text',  'messo_phone', 'Event Phone', '+234 903 491 4989', ['description' => 'Direct event phone or WhatsApp line.']);
+                rcc_admin_field_row('image', 'messo_logo',  'MESSODEX Logo (shown on event hero page)', '', ['description' => 'Optional admin override. For portable live deployment, keep mesodex-logo.jpeg inside assets/images.']);
                 ?>
             </table>
+            <?php rcc_admin_booth_gallery_section('messo_booth_images', 'rcc_messo_booth'); ?>
             <?php submit_button('Save MESSODEX Settings'); ?>
         </form>
     </div>
+    <?php
+}
+
+function rcc_admin_page_gallery()
+{
+    $saved_msg = false;
+    if (
+        isset($_POST['rcc_gallery_nonce']) &&
+        wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['rcc_gallery_nonce'])), 'rcc_save_gallery')
+    ) {
+        $raw_images = isset($_POST['gallery_images']) ? wp_unslash($_POST['gallery_images']) : '[]';
+        // Validate: must be a JSON array of URL strings
+        $arr = json_decode($raw_images, true);
+        if (!is_array($arr)) {
+            $arr = [];
+        }
+        $clean = [];
+        foreach ($arr as $url) {
+            $url = esc_url_raw(trim((string) $url));
+            if ($url) {
+                $clean[] = $url;
+            }
+        }
+        update_option('rcc_opt_gallery_images', wp_json_encode($clean));
+        $saved_msg = true;
+    }
+
+    $saved_json = get_option('rcc_opt_gallery_images', '');
+    $existing   = [];
+    if ($saved_json) {
+        $decoded = json_decode($saved_json, true);
+        if (is_array($decoded)) {
+            $existing = $decoded;
+        }
+    }
+    $gallery_folder = get_template_directory() . '/assets/gallery';
+    $gallery_files  = [];
+    $extensions     = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    if (is_dir($gallery_folder)) {
+        $files = @scandir($gallery_folder) ?: [];
+        foreach ($files as $f) {
+            if (in_array(strtolower(pathinfo($f, PATHINFO_EXTENSION)), $extensions, true)) {
+                $gallery_files[] = $f;
+            }
+        }
+        sort($gallery_files);
+    }
+    ?>
+    <div class="wrap">
+        <h1>Gallery Images</h1>
+        <?php if ($saved_msg) : ?>
+            <div class="notice notice-success is-dismissible"><p>Gallery saved successfully.</p></div>
+        <?php endif; ?>
+
+        <h2 style="margin-top:1.5rem;">&#128193; Theme Gallery Folder <code style="font-size:0.85em;">/assets/gallery/</code></h2>
+        <p>
+            Drop image files directly into <strong><?php echo esc_html($gallery_folder); ?></strong><br>
+            Any image placed there <strong>automatically shows</strong> in the live Gallery page — no saving needed.<br>
+            <em>This folder is the fallback source. The arranged Media Library list below is now the primary gallery source when it has images.</em>
+        </p>
+        <?php if (!empty($gallery_files)) : ?>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin:1rem 0 1.5rem;">
+                <?php foreach ($gallery_files as $f) : ?>
+                    <div style="text-align:center;width:120px;">
+                        <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/gallery/' . $f); ?>"
+                             style="width:120px;height:90px;object-fit:cover;border:1px solid #ddd;border-radius:4px;display:block;">
+                        <span style="font-size:0.72rem;word-break:break-all;display:block;margin-top:4px;"><?php echo esc_html($f); ?></span>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else : ?>
+            <p style="color:#777;font-style:italic;">No images in folder yet. Add images to the folder above to get started.</p>
+        <?php endif; ?>
+
+        <hr>
+        <h2>&#128444; Upload via WordPress Media Library</h2>
+        <p>Use this section to add and arrange images from the WP Media Library.<br>
+           <em>This ordered list is now the main gallery source on the live site. Use the arrow buttons to control display order.</em></p>
+        <form method="post" id="rcc-gallery-form">
+            <?php wp_nonce_field('rcc_save_gallery', 'rcc_gallery_nonce'); ?>
+            <input type="hidden" name="gallery_images" id="rcc-gallery-data" value="<?php echo esc_attr(wp_json_encode($existing)); ?>">
+            <div id="rcc-gallery-thumbs" style="display:flex;flex-wrap:wrap;gap:12px;margin:1rem 0 1.5rem;">
+                <?php foreach ($existing as $index => $url) : ?>
+                    <div class="rcc-gallery-thumb" style="position:relative;width:130px;padding-top:28px;">
+                        <div style="position:absolute;top:0;left:0;display:flex;gap:4px;">
+                            <button type="button" class="button rcc-gallery-move" data-index="<?php echo (int) $index; ?>" data-dir="-1" style="min-height:0;line-height:1.6;padding:0 8px;">&#8592;</button>
+                            <button type="button" class="button rcc-gallery-move" data-index="<?php echo (int) $index; ?>" data-dir="1" style="min-height:0;line-height:1.6;padding:0 8px;">&#8594;</button>
+                        </div>
+                        <img src="<?php echo esc_url($url); ?>" style="width:130px;height:100px;object-fit:cover;display:block;border:1px solid #ddd;border-radius:4px;">
+                        <button type="button" class="button rcc-gallery-remove" data-url="<?php echo esc_attr($url); ?>"
+                                style="position:absolute;top:32px;right:4px;padding:0 6px;line-height:1.6;min-height:0;background:#c00;color:#fff;border-color:#a00;">&times;</button>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <button type="button" class="button button-primary" id="rcc-gallery-add">&#43; Add Images</button>
+            <p class="description" style="margin-top:0.5rem;">Click <em>Add Images</em> to pick photos from the WordPress Media Library.</p>
+            <?php submit_button('Save Gallery'); ?>
+        </form>
+    </div>
+    <script>
+    jQuery(function($){
+        var data = <?php echo wp_json_encode($existing); ?>;
+
+        function refresh(){
+            $('#rcc-gallery-data').val(JSON.stringify(data));
+            var html='';
+            data.forEach(function(url, index){
+                html+='<div class="rcc-gallery-thumb" style="position:relative;width:130px;padding-top:28px;">'
+                    +'<div style="position:absolute;top:0;left:0;display:flex;gap:4px;">'
+                    +'<button type="button" class="button rcc-gallery-move" data-index="'+index+'" data-dir="-1" style="min-height:0;line-height:1.6;padding:0 8px;">&#8592;</button>'
+                    +'<button type="button" class="button rcc-gallery-move" data-index="'+index+'" data-dir="1" style="min-height:0;line-height:1.6;padding:0 8px;">&#8594;</button>'
+                    +'</div>'
+                    +'<img src="'+url+'" style="width:130px;height:100px;object-fit:cover;display:block;border:1px solid #ddd;border-radius:4px;">'
+                    +'<button type="button" class="button rcc-gallery-remove" data-url="'+url+'" style="position:absolute;top:32px;right:4px;padding:0 6px;line-height:1.6;min-height:0;background:#c00;color:#fff;border-color:#a00;">&times;</button>'
+                    +'</div>';
+            });
+            $('#rcc-gallery-thumbs').html(html);
+        }
+
+        $(document).on('click','#rcc-gallery-add',function(e){
+            e.preventDefault();
+            var frame=wp.media({title:'Add Gallery Images',multiple:true,library:{type:'image'}});
+            frame.on('select',function(){
+                frame.state().get('selection').each(function(att){
+                    var url=att.toJSON().url;
+                    if(url && data.indexOf(url)===-1){ data.push(url); }
+                });
+                refresh();
+            });
+            frame.open();
+        });
+
+        $(document).on('click','.rcc-gallery-remove',function(e){
+            e.preventDefault();
+            var url=$(this).data('url');
+            data=data.filter(function(u){ return u!==url; });
+            refresh();
+        });
+        $(document).on('click','.rcc-gallery-move',function(e){
+            e.preventDefault();
+            var dir=parseInt($(this).data('dir'),10);
+            var index=parseInt($(this).data('index'),10);
+            var swap=index+dir;
+            if(swap < 0 || swap >= data.length){ return; }
+            var temp=data[index];
+            data[index]=data[swap];
+            data[swap]=temp;
+            refresh();
+        });
+    });
+    </script>
     <?php
 }
 
