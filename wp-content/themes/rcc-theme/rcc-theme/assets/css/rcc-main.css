@@ -1562,8 +1562,9 @@ body.rcc-loading {
 
 .rcc-event-hero--messo .rcc-event-hero__overlay {
   background:
-    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,100,200,0.12) 0%, transparent 70%),
-    linear-gradient(180deg, rgba(2,8,28,0.75) 0%, rgba(2,8,20,0.55) 50%, rgba(2,8,28,0.85) 100%);
+    linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 38%, rgba(255,255,255,0.08) 100%),
+    radial-gradient(ellipse 82% 62% at 50% 48%, rgba(89,150,255,0.18) 0%, rgba(89,150,255,0.05) 45%, transparent 72%),
+    linear-gradient(180deg, rgba(2,8,28,0.46) 0%, rgba(2,8,20,0.28) 50%, rgba(2,8,28,0.58) 100%);
 }
 
 .rcc-event-hero__inner {
@@ -1596,6 +1597,18 @@ body.rcc-loading {
 .rcc-ev-page--messo .rcc-event-hero__brand-logo {
   height: 200px;
   width: auto;
+  filter: drop-shadow(0 8px 24px rgba(255,255,255,0.12)) drop-shadow(0 12px 32px rgba(0,0,0,0.45));
+}
+
+.rcc-ev-page--messo .rcc-event-hero__subtitle {
+  color: rgba(214, 230, 255, 0.96);
+  text-shadow: 0 2px 16px rgba(0,0,0,0.35);
+}
+
+.rcc-ev-page--messo .rcc-event-hero__meta span {
+  background: rgba(18, 42, 86, 0.78);
+  border-color: rgba(99, 164, 255, 0.46);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
 }
 
 .rcc-event-hero__center {
@@ -2127,11 +2140,12 @@ body.rcc-loading {
   --rcc-gold-pale: rgba(59,130,246,0.08);
 }
 .rcc-ev-page--messo .rcc-section-tag           { color: var(--mx-blue-lt); }
-.rcc-ev-page--messo .rcc-event-hero__subtitle  { color: var(--mx-blue-lt); }
+.rcc-ev-page--messo .rcc-event-hero__subtitle  { color: rgba(214, 230, 255, 0.96); text-shadow: 0 2px 16px rgba(0,0,0,0.35); }
 .rcc-ev-page--messo .rcc-event-hero__tagline   { color: var(--mx-blue-lt); }
 .rcc-ev-page--messo .rcc-event-hero__meta span {
   border-color: rgba(59,130,246,0.5);
-  background: rgba(59,130,246,0.12);
+  background: rgba(18, 42, 86, 0.78);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
 }
 .rcc-ev-page--messo .rcc-ev-section-header h2  { color: var(--rcc-white); }
 .rcc-ev-page--messo .rcc-ev-profile-card h3    { color: var(--mx-blue-lt); }

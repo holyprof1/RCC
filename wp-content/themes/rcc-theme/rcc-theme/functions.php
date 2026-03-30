@@ -1018,7 +1018,9 @@ function rcc_render_event_page($slug)
                  src="<?php echo esc_url($logo); ?>"
                  alt="<?php echo esc_attr($data['title']); ?> logo">
             <div class="rcc-event-hero__center">
-                <h1 class="rcc-event-hero__title"><?php echo esc_html($data['title']); ?></h1>
+                <?php if ($is_mega) : ?>
+                    <h1 class="rcc-event-hero__title"><?php echo esc_html($data['title']); ?></h1>
+                <?php endif; ?>
                 <p class="rcc-event-hero__subtitle"><?php echo esc_html($data['subtitle']); ?></p>
                 <div class="rcc-event-hero__meta">
                     <span>&#128197; <?php echo esc_html($data['date']); ?></span>
@@ -1257,7 +1259,7 @@ function rcc_render_book_a_stand_page()
                     <label>Nature of Business<input type="text" name="nature_of_business" required></label>
                     <label>Company Name<input type="text" name="company_name" required></label>
                     <label>Country<input type="text" name="country" required></label>
-                    <label>Company Website<input type="url" name="company_website"></label>
+                    <label>Company Website<input type="text" name="company_website" placeholder="https://www.example.com"></label>
                     <label>Contact Person: Full Name<input type="text" name="contact_name" required></label>
                     <label>Job Title<input type="text" name="job_title"></label>
                     <label>Email Address<input type="email" name="email" required></label>
@@ -1452,7 +1454,7 @@ function rcc_render_contact_page()
                     <div class="rcc-form-grid">
                         <label>Company Name (Required)<input type="text" name="company_name" required></label>
                         <label>Country (Required)<input type="text" name="country" required></label>
-                        <label>Company Website (Optional)<input type="url" name="company_website" placeholder="https://"></label>
+                        <label>Company Website (Optional)<input type="text" name="company_website" placeholder="https://www.example.com"></label>
                         <label>Contact Person: Full Name (Required)<input type="text" name="contact_name" required></label>
                         <label>Job Title (Optional)<input type="text" name="job_title"></label>
                         <label>Email Address (Required)<input type="email" name="email" required></label>
@@ -1607,7 +1609,15 @@ function rcc_handle_submit_enquiry()
         $headers[] = 'Reply-To: ' . $fields['Email Address'];
     }
 
-    $sent = wp_mail($site['email'], 'New Exhibition Enquiry - ' . $form_type, implode("\n\n", $body), $headers);
+    $recipient = 'info@radiantccafrica.com';
+    if (!empty($site['email']) && is_email($site['email'])) {
+        $recipient = $site['email'];
+    }
+
+    $headers[] = 'Content-Type: text/plain; charset=UTF-8';
+    $headers[] = 'From: Radiant Creative Concepts <' . $recipient . '>';
+
+    $sent = wp_mail($recipient, 'New Exhibition Enquiry - ' . $form_type, implode("\n\n", $body), $headers);
     $redirect = wp_get_referer() ? wp_get_referer() : home_url('/');
     $redirect = remove_query_arg(['sent'], $redirect);
     wp_safe_redirect(add_query_arg('sent', $sent ? '1' : '0', $redirect));
